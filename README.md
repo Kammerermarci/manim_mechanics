@@ -133,7 +133,7 @@ manim -pqh src/manim_mechanics/scenes/rzg_konz_1_1.py partikularis_megoldas
 
 ## 📄 License & contribution
 
-(keep whatever license text you use or add your own contributions guidelines)
+None
 
 
 ---
