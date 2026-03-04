@@ -1,6 +1,6 @@
 import manim 
 import numpy as np
-from manim import ValueTracker, linear
+from manim import ValueTracker, linear, Tex, Line, DashedLine, Arc, MathTex, Create, Write
 from manim_mechanics import (
     Node2D,
     NodeStyle,
@@ -47,23 +47,23 @@ class homogen_megoldas(manim.Scene):
         # increase lengths for drawing
         R = R * SF
 
-        origin = np.array([0,0,0], dtype=float)
+        origin = np.array([0.5,0.5,0], dtype=float)
         origin_point = Node2D(np.array(origin), style=NodeStyle(marker="pin"))
 
         def phi_of_t(tt: float) -> float:        
             return np.exp(- zeta * omega_n * tt) * (C1 * np.cos(omega_d * tt) + C2 * np.sin(omega_d * tt))
         
         def B_of_t(tt: float) -> float:
-            return np.array([2*R*np.sin(phi_of_t(tt)), -2*R*(np.cos(phi_of_t(tt))), 0.0])
+            return origin + np.array([2*R*np.sin(phi_of_t(tt)), -2*R*(np.cos(phi_of_t(tt))), 0.0])
         
         def C_of_t(tt: float) -> float:
-            return np.array([-R*np.sin(phi_of_t(tt)), R*(np.cos(phi_of_t(tt))), 0.0])
+            return origin + np.array([-R*np.sin(phi_of_t(tt)), R*(np.cos(phi_of_t(tt))), 0.0])
         
         def D_of_t(tt: float) -> float:
             return (origin + B_of_t(tt))/2
         
-        B_support_point = Node2D(np.array([-2.5, -2*R, 0.0]))
-        C_support_point = Node2D(np.array([-2.5, R, 0.0]))
+        B_support_point = Node2D(origin + np.array([-2.5, -2*R, 0.0]))
+        C_support_point = Node2D(origin + np.array([-2.5, R, 0.0]))
 
         B_point = Node2D(B_of_t(0.0), style=NodeStyle(marker="pin"))
         C_point = Node2D(C_of_t(0.0), style=NodeStyle(marker="pin"))
@@ -74,8 +74,17 @@ class homogen_megoldas(manim.Scene):
         D_point.add_updater(lambda mobj, dt: mobj.set_position(D_of_t(t.get_value())))
 
         disc = Disc(origin_point.anchor, R)
+        prev_phi = phi_of_t(0.0)
 
-        pinned_support = PinnedSupport(origin_point.anchor, PinnedSupportStyle(size=0.2))
+        def update_disc_rotation(mobj, dt):
+            nonlocal prev_phi
+            cur_phi = -phi_of_t(t.get_value())
+            mobj.rotate(-(cur_phi - prev_phi), about_point=mobj.get_center())
+            prev_phi = cur_phi
+
+        disc.add_updater(update_disc_rotation)
+
+        pinned_support = PinnedSupport(origin_point.anchor, PinnedSupportStyle(size=0.225))
 
         spring = Spring(B_support_point.anchor, B_point.anchor)
         dashpot = Dashpot(C_support_point.anchor, C_point.anchor)
@@ -87,7 +96,9 @@ class homogen_megoldas(manim.Scene):
         pinned_support.set_z_index(2)
         B_point.set_z_index(2)
         C_point.set_z_index(2)
-        D_point.set_z_index(2)
+        D_point.set_z_index(-1)
+        bar.set_z_index(-1)
+
 
         self.add(B_point,C_point,D_point,
                 disc,pinned_support,spring,dashpot,bar,f1,f2)
