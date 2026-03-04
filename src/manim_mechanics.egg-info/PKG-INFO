@@ -1,0 +1,31 @@
+Metadata-Version: 2.4
+Name: manim-mechanics
+Version: 0.1.0
+Summary: Anchor-based mechanical elements for Manim (2D).
+Author: Your Name
+License: MIT
+Project-URL: Repository, https://example.com/replace-me
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: manim>=0.18.0
+Requires-Dist: numpy>=1.22
+
+# manim-mechanics
+
+Anchor-based mechanical elements for Manim Community Edition (2D).
+
+## Goals
+- Clean, simple "animation toolbox" (not a solver)
+- Elements defined by anchors (start/end/pose references)
+- Updater-driven redraw for smooth animations
+- First-class LaTeX labels through Manim's `Tex` / `MathTex`
+
+## Quick start (editable install)
+```bash
+pip install -e .
+```
+
+## Run the demo scene
+```bash
+manim -pqh src/manim_mechanics/scenes/demo_oscillator.py DemoOscillator
+```

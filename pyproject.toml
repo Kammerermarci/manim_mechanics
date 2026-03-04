@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "manim-mechanics"
+version = "0.1.0"
+description = "Anchor-based mechanical elements for Manim (2D)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name="Your Name"}]
+dependencies = [
+  "manim>=0.18.0",
+  "numpy>=1.22",
+]
+
+[project.urls]
+Repository = "https://example.com/replace-me"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
