@@ -1,0 +1,2 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/marci/OneDrive/.Egyetem/Projektek/manim-mechanics/media/videos/demo_oscillator/1080p60/partial_movie_files/DemoOscillator/4155443901_3777061308_3730604800.mp4'

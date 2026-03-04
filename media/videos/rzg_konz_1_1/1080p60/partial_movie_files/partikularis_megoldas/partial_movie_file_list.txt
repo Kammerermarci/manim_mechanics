@@ -1,0 +1,2 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/marci/OneDrive/.Egyetem/Projektek/manim-mechanics/media/videos/rzg_konz_1_1/1080p60/partial_movie_files/partikularis_megoldas/4155443901_1977702972_2927944540.mp4'

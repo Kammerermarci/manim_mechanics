@@ -1,0 +1,2 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/marci/OneDrive/.Egyetem/Projektek/manim-mechanics/media/videos/rzg_konz_1_1/720p30/partial_movie_files/elso_feladat/122916032_2108167862_1564283837.mp4'
