@@ -18,7 +18,7 @@ from ..anchors import Anchor
 @dataclass
 class DiscStyle:
     fill: str = "#aaaaaa"       # kept for backward compatibility
-    fill_shades: tuple[str, str, str] = ("#bfbfbf", "#aaaaaa", "#919191")
+    fill_shades: tuple[str, str, str] = ("#bfbfbf", "#aaaaaa", "#808080")
     fill_texture_size: int = 256
     stroke_width: float = 4   # slightly thicker outline for readability
     fill_opacity: float = 1.0
