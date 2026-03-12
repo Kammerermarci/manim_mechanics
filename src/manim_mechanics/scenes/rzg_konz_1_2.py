@@ -34,7 +34,6 @@ class homogen_megoldas(manim.Scene):
         theta = 0.5 * m * R**2
         omega_n = np.sqrt(2 * k * R / theta)
         zeta = c * R / (2 * theta * omega_n)
-        print(f"zeta = {zeta}")
         omega_d = omega_n * np.sqrt(1 - zeta**2)
         T = 2*np.pi/omega_d
 
@@ -122,7 +121,6 @@ class partikularis_megoldas(manim.Scene):
         theta = 0.5 * m * R**2
         omega_n = np.sqrt(2 * k * R / theta)
         zeta = c * R / (2 * theta * omega_n)
-        print(f"zeta = {zeta}")
         omega_d = omega_n * np.sqrt(1 - zeta**2)
         T = 2*np.pi/omega_d
 
@@ -135,24 +133,23 @@ class partikularis_megoldas(manim.Scene):
         # increase lengths for drawing
         R = R * SF
 
-
-        origin = np.array([0,0,0], dtype=float)
+        origin = np.array([0.5,0.25,0], dtype=float)
         origin_point = Node2D(np.array(origin), style=NodeStyle(marker="pin"))
 
         def phi_of_t(tt: float) -> float:        
             return A * np.sin(omega * tt - theta)
         
         def B_of_t(tt: float) -> float:
-            return np.array([2*R*np.sin(phi_of_t(tt)), -2*R*(np.cos(phi_of_t(tt))), 0.0])
+            return origin + np.array([2*R*np.sin(phi_of_t(tt)), -2*R*(np.cos(phi_of_t(tt))), 0.0])
         
         def C_of_t(tt: float) -> float:
-            return np.array([-R*np.sin(phi_of_t(tt)), R*(np.cos(phi_of_t(tt))), 0.0])
+            return origin + np.array([-R*np.sin(phi_of_t(tt)), R*(np.cos(phi_of_t(tt))), 0.0])
         
         def D_of_t(tt: float) -> float:
             return (origin + B_of_t(tt))/2
         
-        B_support_point = Node2D(np.array([-2.5, -2*R, 0.0]))
-        C_support_point = Node2D(np.array([-2.5, R, 0.0]))
+        B_support_point = Node2D(origin + np.array([-2.5, -2*R, 0.0]))
+        C_support_point = Node2D(origin + np.array([-2.5, R, 0.0]))
 
         B_point = Node2D(B_of_t(0.0), style=NodeStyle(marker="pin"))
         C_point = Node2D(C_of_t(0.0), style=NodeStyle(marker="pin"))
@@ -163,6 +160,15 @@ class partikularis_megoldas(manim.Scene):
         D_point.add_updater(lambda mobj, dt: mobj.set_position(D_of_t(t.get_value())))
 
         disc = Disc(origin_point.anchor, R)
+        prev_phi = phi_of_t(0.0)
+
+        def update_disc_rotation(mobj, dt):
+            nonlocal prev_phi
+            cur_phi = -phi_of_t(t.get_value())
+            mobj.rotate(-(cur_phi - prev_phi), about_point=mobj.get_center())
+            prev_phi = cur_phi
+
+        disc.add_updater(update_disc_rotation)
 
         pinned_support = PinnedSupport(origin_point.anchor, PinnedSupportStyle(size=0.2))
 

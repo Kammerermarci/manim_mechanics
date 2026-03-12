@@ -297,7 +297,6 @@ class FixedSupport(VGroup):
 
     def __init__(
         self,
-        self,
         anchor: Anchor,
         size: float = 0.2,
         angle: AngleLike = 0.0,          # DEGREES
@@ -311,8 +310,8 @@ class FixedSupport(VGroup):
         self.angle = angle
         self.bar_stroke_width = float(bar_stroke_width)
         self.trap_fill = trap_fill
-        self._z_index = z_index
 
+        # Valid placeholders (Polygon cannot be empty)
         eps = 1e-6
         self.bar = Line(np.array([0.0, 0.0, 0.0]), np.array([eps, 0.0, 0.0]))
         self.trap = Polygon(
@@ -327,15 +326,14 @@ class FixedSupport(VGroup):
         self.add(self.trap, self.bar)
 
         self._build_templates()
-        self._rebuild_full()
+        self._rebuild()
 
-        self._last_center = self._get_anchor_point().copy()
-        self._last_angle = self._get_angle()
+        # cache last driven state
+        self._last_p = np.array(self.anchor.get_point(), dtype=float).reshape(3)
+        self._last_ang = self._get_angle()
+        self._dirty = False
 
-        self.add_updater(self._sync_pose)
-
-    def _get_anchor_point(self) -> np.ndarray:
-        return np.array(self.anchor.get_point(), dtype=float).reshape(3)
+        self.add_updater(lambda mob, dt: mob._maybe_rebuild())
 
     def _get_angle(self) -> float:
         """Return rotation in radians; self.angle is stored/treated in DEGREES."""
@@ -350,21 +348,20 @@ class FixedSupport(VGroup):
 
     def set_angle(self, angle_deg: float) -> "FixedSupport":
         self.angle = float(angle_deg)
+        self._dirty = True
         return self
 
     def set_size(self, size: float) -> "FixedSupport":
         """Size is a direct scale parameter (not a style object)."""
         self.size = float(size)
         self._build_templates()
-        self._rebuild_full()
-        self._last_center = self._get_anchor_point().copy()
-        self._last_angle = self._get_angle()
+        self._dirty = True
         return self
 
     def _build_templates(self) -> None:
         s = float(self.size)
 
-        # Geometry (original form)
+        # Geometry (tweak these multipliers if you want a different look)
         bar_len = 10.0 * s
         h = 2.0 * s
         top_w = 1.0 * bar_len
@@ -377,7 +374,7 @@ class FixedSupport(VGroup):
         )
         bar_tpl.set_stroke(color=BLACK, width=self.bar_stroke_width, opacity=1.0)
 
-        # Trapezoid touches the bar exactly, extends in -Y
+        # Trapezoid touches the bar (no gap), extends in -Y
         trap_pts = [
             np.array([-top_w / 2, 0.0, 0.0]),
             np.array([+top_w / 2, 0.0, 0.0]),
@@ -385,50 +382,35 @@ class FixedSupport(VGroup):
             np.array([-bot_w / 2, -h, 0.0]),
         ]
         trap_tpl = Polygon(*trap_pts)
-        trap_tpl.set_stroke(opacity=0.0)
-        trap_tpl.set_fill(color=ManimColor(self.trap_fill), opacity=1.0)
-
-        for m in (bar_tpl, trap_tpl):
-            m.set_z_index(self._z_index)
+        trap_color = ManimColor(self.trap_fill)
+        trap_tpl.set_fill(color=trap_color, opacity=1.0)
+        trap_tpl.set_stroke(color=trap_color, width=1.5, opacity=1.0)
 
         self._tpl = {"bar": bar_tpl, "trap": trap_tpl}
 
-    def _rebuild_full(self) -> None:
-        """Rebuild geometry from templates once, then place/rotate it."""
-        self.bar.become(self._tpl["bar"].copy())
-        self.trap.become(self._tpl["trap"].copy())
-
-        ang = self._get_angle()
-        ctr = self._get_anchor_point()
-
-        self.rotate(ang, about_point=ORIGIN)
-        self.shift(ctr)
-
-    def _sync_pose(self, mob, dt: float) -> None:
-        """Apply only incremental pose updates; do not rebuild geometry every frame."""
-        new_center = self._get_anchor_point()
-        new_angle = self._get_angle()
-
-        dtheta = new_angle - self._last_angle
-        dshift = new_center - self._last_center
-
-        if abs(dtheta) > 1e-12:
-            mob.rotate(dtheta, about_point=self._last_center)
-
-        if np.linalg.norm(dshift) > 1e-12:
-            mob.shift(dshift)
-
-        self._last_center = new_center.copy()
-        self._last_angle = new_angle
     def _rebuild(self) -> None:
         p = np.array(self.anchor.get_point(), dtype=float).reshape(3)
         ang = self._get_angle()
 
-        # CRITICAL FIX: rotate BOTH about the SAME local anchor point (origin)
         about = np.array([0.0, 0.0, 0.0])
 
         self.trap.become(self._tpl["trap"].copy().rotate(ang, about_point=about).shift(p))
         self.bar.become(self._tpl["bar"].copy().rotate(ang, about_point=about).shift(p))
+
+        self._last_p = p
+        self._last_ang = ang
+        self._dirty = False
+
+    def _maybe_rebuild(self) -> None:
+        p = np.array(self.anchor.get_point(), dtype=float).reshape(3)
+        ang = self._get_angle()
+
+        if (
+            self._dirty
+            or not np.allclose(p, self._last_p)
+            or not np.isclose(ang, self._last_ang)
+        ):
+            self._rebuild()
 
 class RollerSupport(_ConstraintBase):
     """Roller support (triangle + small rollers)."""
